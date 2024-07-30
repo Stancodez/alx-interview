@@ -1,16 +1,25 @@
 #!/usr/bin/python3
 def canUnlockAll(boxes):
-    n = len(boxes)
-    opened = set([0])  # Start with the first box already opened
-    stack = [0]  # Stack to manage the boxes to check
+  """
+  Determines if all boxes can be opened.
 
-    while stack:
-        box = stack.pop()
-        for key in boxes[box]:
-            if key not in opened and key < n:
-                opened.add(key)
-                stack.append(key)
+  Args:
+    boxes: A list of lists, where each inner list contains keys to other boxes.
 
-    # Check if all boxes are opened
-    return len(opened) == n
+  Returns:
+    True if all boxes can be opened, False otherwise.
+  """
+
+  n = len(boxes)
+  visited = [False] * n
+  visited[0] = True  # The first box is unlocked
+
+  def dfs(box_index):
+    for key in boxes[box_index]:
+      if 0 <= key < n and not visited[key]:
+        visited[key] = True
+        dfs(key)
+
+  dfs(0)
+  return all(visited)
 
