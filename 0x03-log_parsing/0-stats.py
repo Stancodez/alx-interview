@@ -2,7 +2,6 @@
 import sys
 import signal
 
-# Initialize variables
 total_file_size = 0
 status_code_counts = {
     "200": 0,
@@ -30,15 +29,14 @@ def signal_handler(sig, frame):
     print_statistics()
     sys.exit(0)
 
-# Register the signal handler for keyboard interruption
 signal.signal(signal.SIGINT, signal_handler)
 
 try:
     for line in sys.stdin:
-        # Try to parse the line
+        
         parts = line.split()
 
-        # Check if the line matches the expected format
+        
         if len(parts) < 9:
             continue
 
@@ -54,16 +52,13 @@ try:
         if not request.startswith('"GET'):
             continue
 
-        # Update total file size
         total_file_size += file_size
 
-        # Update status code counts
         if status_code in status_code_counts:
             status_code_counts[status_code] += 1
 
         line_count += 1
 
-        # Print statistics every 10 lines
         if line_count % 10 == 0:
             print_statistics()
 
@@ -71,6 +66,5 @@ except Exception as e:
     print(f"Error: {e}")
 
 finally:
-    # Print final statistics
     print_statistics()
 
