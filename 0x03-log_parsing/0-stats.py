@@ -1,70 +1,58 @@
 #!/usr/bin/python3
-import sys
-import signal
+"""Reads from standard input and computes metrics.
 
-total_file_size = 0
-status_code_counts = {
-    "200": 0,
-    "301": 0,
-    "400": 0,
-    "401": 0,
-    "403": 0,
-    "404": 0,
-    "405": 0,
-    "500": 0
-}
-line_count = 0
+After every ten lines or the input of a keyboard interruption (CTRL + C),
+prints the following statistics:
+    - Total file size up to that point.
+    - Count of read status codes up to that point.
+"""
 
-def print_statistics():
-    """Prints the statistics computed so far."""
-    global total_file_size, status_code_counts
 
-    print(f"File size: {total_file_size}")
-    for code in sorted(status_code_counts.keys()):
-        if status_code_counts[code] > 0:
-            print(f"{code}: {status_code_counts[code]}")
+def print_stats(size, status_codes):
+    """Print accumulated metrics.
 
-def signal_handler(sig, frame):
-    """Handles keyboard interruption (Ctrl + C) to print statistics."""
-    print_statistics()
-    sys.exit(0)
+    Args:
+        size (int): The accumulated read file size.
+        status_codes (dict): The accumulated count of status codes.
+    """
+    print("File size: {}".format(size))
+    for key in sorted(status_codes):
+        print("{}: {}".format(key, status_codes[key]))
 
-signal.signal(signal.SIGINT, signal_handler)
+if __name__ == "__main__":
+    import sys
 
-try:
-    for line in sys.stdin:
-        
-        parts = line.split()
+    size = 0
+    status_codes = {}
+    valid_codes = ['200', '301', '400', '401', '403', '404', '405', '500']
+    count = 0
 
-        
-        if len(parts) < 9:
-            continue
+    try:
+        for line in sys.stdin:
+            if count == 10:
+                print_stats(size, status_codes)
+                count = 1
+            else:
+                count += 1
 
-        ip_address = parts[0]
-        date = parts[3][1:]
-        request = parts[5] + " " + parts[6] + " " + parts[7]
-        status_code = parts[8]
-        try:
-            file_size = int(parts[9])
-        except ValueError:
-            continue
+            line = line.split()
 
-        if not request.startswith('"GET'):
-            continue
+            try:
+                size += int(line[-1])
+            except (IndexError, ValueError):
+                pass
 
-        total_file_size += file_size
+            try:
+                if line[-2] in valid_codes:
+                    if status_codes.get(line[-2], -1) == -1:
+                        status_codes[line[-2]] = 1
+                    else:
+                        status_codes[line[-2]] += 1
+            except IndexError:
+                pass
 
-        if status_code in status_code_counts:
-            status_code_counts[status_code] += 1
+        print_stats(size, status_codes)
 
-        line_count += 1
-
-        if line_count % 10 == 0:
-            print_statistics()
-
-except Exception as e:
-    print(f"Error: {e}")
-
-finally:
-    print_statistics()
-
+    except KeyboardInterrupt:
+        print_stats(size, status_codes)
+        raise
