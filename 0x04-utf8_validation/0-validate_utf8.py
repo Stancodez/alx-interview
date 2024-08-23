@@ -1,33 +1,33 @@
 #!/usr/bin/python3
+'''determines if a given data set represents a valid utf-8 encoding'''
+
 def validUTF8(data):
-    """Determine if a given data set represents a valid UTF-8 encoding."""
-    num_bytes = 0
+    # number of bytes
+    numberOfBytes = 0
 
-    # Masks for the most significant bits
-    mask1 = 1 << 7  # 10000000
-    mask2 = 1 << 6  # 01000000
-
+    # looping through dataset
     for num in data:
-        mask = 1 << 7
-        if num_bytes == 0:
-            # Count the number of leading 1's to determine byte size
-            while mask & num:
-                num_bytes += 1
-                mask >>= 1
+        # get binary representation
+        # get least significant 8-bits
+        binaryRepresentation = format(num, '#010b')[-8:]
 
-            # 1 byte character
-            if num_bytes == 0:
+        # if no bytes then process new utf-8 character
+        if numberOfBytes == 0:
+            # get number of 1s at beginning of string
+            for bit in binaryRepresentation:
+                if bit == '0': break
+                numberOfBytes += 1
+
+            if numberOfBytes == 0:
                 continue
 
-            # Invalid scenarios (byte count must be 2 to 4)
-            if num_bytes == 1 or num_bytes > 4:
+            if numberOfBytes == 1 or numberOfBytes > 4:
                 return False
+
         else:
-            # Subsequent bytes must have a leading 10
-            if not (num & mask1 and not (num & mask2)):
+            if not (binaryRepresentation[0] == '1' and binaryRepresentation[1] == '0'):
                 return False
 
-        num_bytes -= 1
+        numberOfBytes -= 1
 
-    return num_bytes == 0
-
+    return numberOfBytes == 0
